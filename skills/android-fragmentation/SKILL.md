@@ -1,51 +1,47 @@
 ---
 name: android-fragmentation
-description: Use when the user asks about Android device fragmentation, including supporting multiple screen sizes, densities, OS/API versions, OEM-specific behavior, foldables, or choosing a device testing strategy.
+description: Audits and fixes Android device fragmentation issues. Use when the user asks about supporting multiple screen sizes, densities, tablets, foldables, or multi-window; choosing minSdk or handling API-level differences; OEM-specific bugs such as Samsung, Xiaomi, Oppo, Vivo battery optimization or background kills; device-specific crashes; or building a device test matrix.
 ---
 
 # Android Device Fragmentation
 
-## When to use
-Apply this skill when the user is building, debugging, or planning an Android app that must work across many devices and OS versions.
+Fragmentation has four axes: screen, OS/API level, OEM behavior, hardware. Identify the axis first, then load only the matching reference.
 
-## Approach
-1. Clarify the target: minSdk, targetSdk, device categories (phones, tablets, foldables, Wear, TV), and key markets.
-2. Identify which fragmentation axis is the problem, then apply the matching guidance below.
-3. Recommend a testing plan for that axis before finishing.
+## Workflow
 
-## Axes of fragmentation
+1. **Gather context.** Ask for or find: minSdk, targetSdk, UI toolkit (Compose or XML), device categories, target markets, and the exact symptom (crash, layout bug, killed background work).
+2. **Audit.** If `scripts/audit_project.py` exists, run it on the project root. Otherwise inspect `AndroidManifest.xml`, `build.gradle(.kts)`, and layouts by hand.
+3. **Classify** each finding by axis using the router below.
+4. **Report** findings before changing anything (format below).
+5. **Fix** the highest-impact issues first. Keep changes minimal.
+6. **Verify** against the test matrix in `references/testing-matrix.md`. State what was and was not verified.
 
-### Screen size and density
-- Use dp/sp units, never px.
-- Use responsive layouts: ConstraintLayout, Compose adaptive layouts, WindowSizeClass.
-- Use resource qualifiers (sw600dp, land, night) for XML layouts.
-- Provide vector drawables; supply density-specific bitmaps only when needed.
-- Handle foldables and multi-window: react to window size changes, avoid locking orientation.
+## Router
 
-### OS / API level
-- Choose minSdk from real usage data for the target market.
-- Guard newer APIs with Build.VERSION.SDK_INT checks.
-- Prefer AndroidX and Jetpack libraries for backward compatibility.
-- Review behavior changes for each targetSdk bump (permissions, background limits, notifications, storage).
+| Symptom or question | Read |
+|---|---|
+| Layout breaks on tablets, foldables, landscape, split-screen, odd densities | `references/screens-and-foldables.md` |
+| Crash or behavior change on specific Android versions, choosing minSdk/targetSdk | `references/api-level-changes.md` |
+| Works on Pixel, fails on Samsung/Xiaomi/etc., background work killed, notification delays | `references/oem-quirks.md` |
+| Which devices and APIs to test, emulator vs real device, CI setup | `references/testing-matrix.md` |
 
-### OEM customizations
-- Aggressive battery optimization and background process killing vary by manufacturer; test background work (WorkManager, foreground services) on several OEMs.
-- Custom permission dialogs, skins, and system UI differences can change app behavior.
-- Do not rely on undocumented OEM behavior; use documented APIs and degrade gracefully.
+## Rules
 
-### Hardware differences
-- Check for features at runtime (PackageManager.hasSystemFeature) and declare uses-feature with required=false when optional.
-- Expect differences in cameras, sensors, biometrics, and memory.
-- Optimize for low-RAM devices (smaller images, lazy loading, avoid memory leaks).
+- Decide with data (Play Console device catalog, Android vitals, crash reports), not guesses.
+- Branch on window size classes and feature checks, never on device model or manufacturer, for UI.
+- Guard newer APIs with `Build.VERSION.SDK_INT` or an AndroidX compat wrapper.
+- Detect hardware at runtime with `PackageManager.hasSystemFeature`, and mark optional features `required="false"` in the manifest.
+- Do not lock orientation or disable resizing to avoid layout work.
+- Treat OEM behavior as unreliable. Use documented APIs, degrade gracefully, and tell the user when a workaround is OEM-specific.
+- If information is missing, state your assumption instead of guessing silently.
 
-## Testing strategy
-- Cover a matrix: small/large screens, low/high density, oldest and newest supported API, at least 2-3 OEMs.
-- Use Android Studio emulators for size/API coverage.
-- Use cloud device farms (for example Firebase Test Lab) for real-device coverage.
-- Use the Play Console device catalog and pre-launch reports to find device-specific crashes.
-- Add automated UI tests that run across the matrix in CI.
+## Report format
 
-## Output guidance
-- Give concrete, minimal recommendations tied to the user's stated minSdk and device targets.
-- Prefer short checklists and code snippets over long explanations.
-- State assumptions when information is missing.
+For each finding give:
+- **Axis:** screen | API | OEM | hardware
+- **Where:** file and line, or component
+- **Why it breaks:** one sentence
+- **Fix:** minimal change
+- **Priority:** high | medium | low
+
+End with a short list of what to test and on which devices or API levels.
