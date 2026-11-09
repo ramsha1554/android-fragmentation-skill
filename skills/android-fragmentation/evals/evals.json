@@ -1,0 +1,79 @@
+{
+  "skill_name": "android-fragmentation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "My Compose app looks stretched on tablets and breaks when I unfold my Galaxy Z Fold. How do I fix it?",
+      "expected_output": "Reads references/screens-and-foldables.md. Recommends window size classes, adaptive navigation and list-detail layouts, and Jetpack WindowManager FoldingFeature. Does not branch on device model.",
+      "assertions": [
+        "Skill android-fragmentation is loaded",
+        "Mentions window size classes or currentWindowAdaptiveInfo",
+        "Mentions WindowManager or FoldingFeature for fold handling",
+        "Does not suggest checking Build.MODEL or manufacturer for the layout",
+        "Does not suggest locking orientation"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "My app crashes on Android 12 and above with 'Targeting S+ requires that one of FLAG_IMMUTABLE or FLAG_MUTABLE be specified'. Also I want to raise targetSdk. What else should I check?",
+      "expected_output": "Reads references/api-level-changes.md. Fixes the PendingIntent flag and lists other behavior changes to check when raising targetSdk, such as android:exported, notifications permission, foreground service types, and storage permissions.",
+      "assertions": [
+        "Skill android-fragmentation is loaded",
+        "Explains FLAG_IMMUTABLE vs FLAG_MUTABLE",
+        "Mentions at least two other behavior changes (for example android:exported, POST_NOTIFICATIONS, foreground service type)",
+        "Recommends raising targetSdk deliberately and testing",
+        "States uncertainty or says to verify the newest API levels in official docs"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My WorkManager sync works on my Pixel but never runs in the background on Xiaomi and Samsung phones. Users are complaining.",
+      "expected_output": "Reads references/oem-quirks.md. Rules out standard Doze and standby first, recommends diagnosing with ApplicationExitInfo and standby bucket, and suggests guiding users to settings only after evidence of a problem. Warns that OEM behavior is undocumented.",
+      "assertions": [
+        "Skill android-fragmentation is loaded",
+        "Mentions standard Doze or App Standby as something to rule out",
+        "Recommends ApplicationExitInfo or similar diagnostics",
+        "Does not recommend keep-alive hacks such as silent audio or empty foreground notifications",
+        "Does not branch core logic on Build.MANUFACTURER",
+        "Notes that OEM settings vary and may change"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "We are launching an Android app in India next quarter. Which devices and API levels should we test on, and how should we automate it?",
+      "expected_output": "Reads references/testing-matrix.md. Recommends building the matrix from data, a small matrix covering API extremes, screen sizes, OEMs and a low-RAM device, emulators for layout and real devices for OEM behavior, and CI automation.",
+      "assertions": [
+        "Skill android-fragmentation is loaded",
+        "Recommends using usage data (Play Console, Android vitals, market data)",
+        "Proposes a small matrix, roughly 6-10 configurations",
+        "Includes a low-RAM device and at least two OEMs",
+        "Distinguishes emulators for layout/API from real devices for OEM behavior",
+        "Mentions staged rollout or monitoring"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Audit my Android project for fragmentation problems. The project is at the path in the test fixture.",
+      "files": ["fixtures/fragtest"],
+      "expected_output": "Runs scripts/audit_project.py on the project, then reports findings using the report format (axis, where, why it breaks, fix, priority) and ends with what to test. Does not modify files before reporting.",
+      "assertions": [
+        "Skill android-fragmentation is loaded",
+        "Runs or follows the audit script or manually inspects the manifest",
+        "Reports the missing android:exported as high priority",
+        "Reports the orientation lock",
+        "Uses the report format with axis, where, why, fix, priority",
+        "Ends with a short list of what to test and on which devices or API levels",
+        "Does not edit files before reporting"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "How do I support different screen sizes in my iOS SwiftUI app?",
+      "expected_output": "Should NOT trigger the android-fragmentation skill, since the question is about iOS.",
+      "assertions": [
+        "Skill android-fragmentation is not loaded",
+        "Answer is about SwiftUI or iOS, not Android"
+      ]
+    }
+  ]
+}
